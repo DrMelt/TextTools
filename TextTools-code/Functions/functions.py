@@ -316,55 +316,59 @@ class functions(object):
             Filename = (os.path.split(Filepath)[1])[0:len(os.path.split(Filepath)[1]) - 5]
             dirName = Filename + '-DOCX'
         dirPath = os.path.split(Filepath)[0] + os.sep + dirName
-        # 读取图像地址
-        Images = {}
-        ImagesZipin = []
-        ImagesRelsin = {}
-        count = 1
-        for i in re.finditer(r'\[image](.*?)\[/image]', Text):
-            if Images.get(i.group(1), -1) == -1:
-                Images[i.group(1)] = count
-                count = count + 1
-        # 复制图像
-        os.chdir(os.path.split(Filepath)[0])
-        for i in list(Images.keys()):
-            ImagePath = 'media/image' + str(Images[i]) + re.search(r'\..*', os.path.split(i)[1]).group()
-            ImagesZipin.append('word/' + ImagePath)
-            ImagesRelsin[ImagePath] = Images[i]
-            i = re.sub(r'<ruby><rb>(.*?)</rb><rp>\(</rp><rt>(.*?)</rt><rp>\)</rp></ruby>', r'\1', i)
-            shutil.copyfile(os.path.abspath('.' + i), os.path.abspath('./' + dirName + '/word/' + ImagePath))
 
-        # 注册图像
-        os.chdir(dirPath + '/word/_rels')
-        rels = open('document.xml.rels', mode='w', encoding='utf-8')
-        rels.write(self.documentxml0)
-        for item in list(ImagesRelsin.keys()):
-            rels.write('    <Relationship Id="IrId' + str(ImagesRelsin[
-                                                              item]) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="' + item + '"/>\n')
-        rels.write(self.documentxml1)
-        rels.close()
-        # 写入内容
+        if setupParameters['saveImages'] == 'True':
+            # 读取图像地址
+            Images = {}
+            ImagesZipin = []
+            ImagesRelsin = {}
+            count = 1
+            for i in re.finditer(r'\[image](.*?)\[/image]', Text):
+                if Images.get(i.group(1), -1) == -1:
+                    Images[i.group(1)] = count
+                    count = count + 1
+            # 复制图像
+            os.chdir(os.path.split(Filepath)[0])
+            for i in list(Images.keys()):
+                ImagePath = 'media/image' + str(Images[i]) + re.search(r'\..*', os.path.split(i)[1]).group()
+                ImagesZipin.append('word/' + ImagePath)
+                ImagesRelsin[ImagePath] = Images[i]
+                i = re.sub(r'<ruby><rb>(.*?)</rb><rp>\(</rp><rt>(.*?)</rt><rp>\)</rp></ruby>', r'\1', i)
+                shutil.copyfile(os.path.abspath('.' + i), os.path.abspath('./' + dirName + '/word/' + ImagePath))
+            # 注册图像
+            os.chdir(dirPath + '/word/_rels')
+            rels = open('document.xml.rels', mode='w', encoding='utf-8')
+            rels.write(self.documentxml0)
+            for item in list(ImagesRelsin.keys()):
+                rels.write('    <Relationship Id="IrId' + str(ImagesRelsin[
+                                                                  item]) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="' + item + '"/>\n')
+            rels.write(self.documentxml1)
+            rels.close()
+
+        # 写入内容预备
         os.chdir(dirPath + '/word')
         docx = open('document.xml', encoding='utf-8', mode='w')
         Text = '<br>' + Text + '<br>'
         Text = re.sub('\n', '', Text)  # 删除回车
-        # 图像标记处理
-        os.chdir(os.path.split(Filepath)[0])
-        ImgS = re.search(r'\[image](.*?)\[/image]<br>', Text)
-        while ImgS is not None:
-            imgPath = re.sub(r'<ruby><rb>(.*?)</rb><rp>\(</rp><rt>(.*?)</rt><rp>\)</rp></ruby>', r'\1', ImgS.group(1))
-            img = Im.open('.'+imgPath)
-            w = img.width  # 图片的宽
-            h = img.height  # 图片的高
-            Text = Text[:ImgS.start()] + '%s%s" cy="%s%s%s%s%s" cy="%s%s' % (
-                self.DOCXmark_Img0, w*self.PerPx, h*self.PerPx, self.DOCXmark_Img1, Images[Text[ImgS.start(1):ImgS.end(1)]], self.DOCXmark_Img2, w*self.PerPx, h*self.PerPx, self.DOCXmark_Img3) + Text[ImgS.end():]
+
+        if setupParameters['saveImages'] == 'True':
+            # 图像标记处理
+            os.chdir(os.path.split(Filepath)[0])
             ImgS = re.search(r'\[image](.*?)\[/image]<br>', Text)
+            while ImgS is not None:
+                imgPath = re.sub(r'<ruby><rb>(.*?)</rb><rp>\(</rp><rt>(.*?)</rt><rp>\)</rp></ruby>', r'\1', ImgS.group(1))
+                img = Im.open('.'+imgPath)
+                w = img.width  # 图片的宽
+                h = img.height  # 图片的高
+                Text = Text[:ImgS.start()] + '%s%s" cy="%s%s%s%s%s" cy="%s%s' % (
+                    self.DOCXmark_Img0, w*self.PerPx, h*self.PerPx, self.DOCXmark_Img1, Images[Text[ImgS.start(1):ImgS.end(1)]], self.DOCXmark_Img2, w*self.PerPx, h*self.PerPx, self.DOCXmark_Img3) + Text[ImgS.end():]
+                ImgS = re.search(r'\[image](.*?)\[/image]<br>', Text)
 
         Text = self.documentDefault0 + Text + self.documentDefault1  # 拼接头尾
         Text = re.sub(r'<Ruby><Rb>(.*?)</Rb><Rp>\(</Rp><Rt>(.*?)</Rt><Rp>\)</Rp></Ruby>',
-                      r'%s\2%s\1%s' % (self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text)  # 注音处理
+                      r'%s\2%s\1%s' % (self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text)  # 注音处理1
         Text = re.sub(r'<ruby><rb>(.*?)</rb><rp>\(</rp><rt>(.*?)</rt><rp>\)</rp></ruby>',
-                      r'%s\2%s\1%s' % (self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text)  # 注音处理
+                      r'%s\2%s\1%s' % (self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text)  # 注音处理2
         Text = re.sub(r'(</w:r>)(.*?)<br>', r'\1%s\2%s%s' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n       </w:p>'),
                       Text)  # </w:r><br/>  行结尾\n处理
         Text = re.sub('<br>', '\n<w:p/>', Text)
@@ -386,12 +390,14 @@ class functions(object):
         Text = re.sub('<w:p/>(.+)\n            <w:p>',
                       r'<w:p/><w:p>%s\1%s%s<w:p>' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
                       Text)  # 无注音单行处理4
-        Text = re.sub('</w:p>(.+)\n            <w:p>',
-                      r'</w:p><w:p>%s\1%s%s<w:p>' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
-                      Text)  # 无注音单行处理5
-        Text = re.sub('</w:r>(.*?)\n            <w:p>',
+        if setupParameters['saveImages'] == 'True':
+            Text = re.sub('</w:p>(.+)\n            <w:p>',
+                          r'</w:p><w:p>%s\1%s%s<w:p>' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
+                          Text)  # 无注音单行处理5
+            Text = re.sub('</w:r>(.*?)\n            <w:p>',
                       r'</w:r>%s\1%s%s<w:p>' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
                       Text)  # 无注音单行处理6
+
         Text = re.sub('</w:r>\n<w:p/>', r'</w:r></w:p>', Text)  # 末处理 </w:r>\n<w:p/>
         Text = re.sub('<w:body>\n<w:p/>', '<w:body>', Text)  # 修剪开头空格
 
@@ -408,8 +414,9 @@ class functions(object):
                 os.chdir(os.path.split(Filepath)[0] + os.sep + dirName)
                 for file in file_list:
                     zipobj.write(file)
-                for Image in ImagesZipin:
-                    zipobj.write(Image)
+                if setupParameters['saveImages'] == 'True':
+                    for Image in ImagesZipin:
+                        zipobj.write(Image)
         elif mode == 0:
             with zipfile.ZipFile('%s.docx' % Filename, 'w') as zipobj:
                 os.chdir(os.path.split(Filepath)[0] + os.sep + dirName)
