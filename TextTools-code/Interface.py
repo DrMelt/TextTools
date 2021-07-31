@@ -22,17 +22,18 @@ softName = 'TextTools v1.2'
 versions = 'v1.2'
 RBforTXTset_save = ''
 Functions = functions()
-setupParameters = {'Passworld': 'ForRuBi', 'login': 'ForRuBi', 'RBmode': 'hiragana', 'saveImages': 'True', 'Imagescale': '2',
+setupParameters = {'Passworld': 'ForRuBi', 'login': 'ForRuBi', 'RBmode': 'hiragana', 'saveImages': 'True', 'ConvertImage': 'False', 'Imagescale': '2',
                    'w:rFonts': '"Yu Mincho"', 'w:hps': '10', 'w:hpsRaise': '18', 'w:hpsBaseText': '21'}
 setdefault = '''
 login = ForRuBi
 Passworld = ForRuBi
-RBmode = pykakasi
+RBmode = hiragana
 # hiragana:0/pykakasi:1
 
 
+saveImages = False
 #DOCX sets
-saveImages = True
+ConvertImage = False
 #图片缩放比 9525//Imagescale
 Imagescale = 2
 #字体
@@ -80,14 +81,13 @@ def EPUBtoTXT():
         content = f.readlines()  # 列表，全部读完
         for temp in content:
             if setupParameters['saveImages'] == 'False':
-                temp = re.sub(r'<img.*?/>', '<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>', temp)
+                temp = re.sub(r'<(img|image).*?(src|href)="(.*?)".*?/>', '<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>', temp)
             elif setupParameters['saveImages'] == 'True':
-                htmlFilesPath = re.sub('%s(.*)' % os.path.split(Filepath)[0], r'\1',
-                                       re.sub(r'\\', '/', os.path.split(subFiles[i])[0]))
+                htmlFilesPath = re.sub('//', '/',
+                                       re.sub(r'\\', '/', os.path.split(subFiles[i])[0])[len(os.path.split(Filepath)[0]):] + '/')
                 temp = re.sub(r'<(img|image).*?(src|href)="(.*?)".*?/>', r'<p>[image]%s\3[/image]</p>' % htmlFilesPath, temp)  # <img class="fit" src="../image/cover.jpg" alt=""/>
                 # <image height="2048" width="1440" xlink:href="../Images/cover00256.jpeg"/>
-
-                temp = re.sub(r'%s\.\./' % os.path.split(htmlFilesPath)[1], r'', temp)
+                temp = re.sub(r'%s/\.\./' % os.path.split(htmlFilesPath[0:len(htmlFilesPath)-1])[1], r'', temp)
             m.write("%s" % temp)
         f.close
     m.close()
@@ -106,7 +106,7 @@ def EPUBtoTXT():
         # m0 = re.sub(r'\)', '）', m0)
         m0 = re.sub(r'<rt>.*?</rt>', r'', m0)
         m0 = re.sub(r'<.*?>', '', m0)
-        if mp != m0:
+        if m0[:7] != '[image]' or mp != m0 and m0[:7] == '[image]':
             result.write(str(m0) + "\n")  # 写入result
         mp = m0
     result.close()
@@ -158,14 +158,13 @@ def EPUBtoDOCX():
         content = f.readlines()  # 列表，全部读完
         for temp in content:
             if setupParameters['saveImages'] == 'False':
-                temp = re.sub(r'<img.*?/>', '<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>', temp)
+                temp = re.sub(r'<(img|image).*?(src|href)="(.*?)".*?/>', '<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>', temp)
             elif setupParameters['saveImages'] == 'True':
-                htmlFilesPath = re.sub('%s(.*)' % os.path.split(Filepath)[0], r'\1',
-                                       re.sub(r'\\', '/', os.path.split(subFiles[i])[0]))
+                htmlFilesPath = re.sub('//', '/',
+                                       re.sub(r'\\', '/', os.path.split(subFiles[i])[0])[len(os.path.split(Filepath)[0]):] + '/')
                 temp = re.sub(r'<(img|image).*?(src|href)="(.*?)".*?/>', r'<p>[image]%s\3[/image]</p>' % htmlFilesPath, temp)  # <img class="fit" src="../image/cover.jpg" alt=""/>
                 # <image height="2048" width="1440" xlink:href="../Images/cover00256.jpeg"/>
-
-                temp = re.sub(r'%s\.\./' % os.path.split(htmlFilesPath)[1], r'', temp)
+                temp = re.sub(r'%s/\.\./' % os.path.split(htmlFilesPath[0:len(htmlFilesPath)-1])[1], r'', temp)
             m.write("%s" % temp)
         f.close
     m.close()
@@ -175,7 +174,7 @@ def EPUBtoDOCX():
     file.close()
     xm = BeautifulSoup(m, "html.parser")
     Text = ''
-    m0b = ''
+    mp = ''
     for item in xm.find_all("p"):
         if re.search(r'<p.*?>(.*?)</p>', str(item)) is None:
             continue
@@ -193,9 +192,9 @@ def EPUBtoDOCX():
             m0 = re.sub(r'<ruby.*?>(.*?)<rt.*?>(.*?)</rt>(.*?)</ruby>', r'<Ruby><Rb>\1</Rb><Rp>(</Rp><Rt>\2</Rt><Rp>)</Rp></Ruby><ruby>\3</ruby>', m0)  # <ruby>素<rt>す</rt>晴<rt>ば</rt></ruby>
             m0 = re.sub('(<ruby></ruby>)', '', m0)
         m0 = re.sub('(<rb>|</rb>)', '', m0)
-        if m0b != m0:
+        if m0[:7] != '[image]' or mp != m0 and m0[:7] == '[image]':
             Text = Text + m0 + '<br>'
-        m0b = m0
+        mp = m0
     # 文字处理完成，写入docx
     Functions.makeDocx(Text, Filepath, 0, setupParameters)
     os.unlink(os.path.split(Filepath)[0] + os.sep + "%s.buffer" % Filename)

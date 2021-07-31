@@ -317,14 +317,14 @@ class functions(object):
             dirName = Filename + '-DOCX'
         dirPath = os.path.split(Filepath)[0] + os.sep + dirName
 
-        if setupParameters['saveImages'] == 'True':
+        if setupParameters['ConvertImage'] == 'True':
             # 读取图像地址
             Images = {}
             ImagesZipin = []
             ImagesRelsin = {}
             count = 1
             for i in re.finditer(r'\[image](.*?)\[/image]', Text):
-                if Images.get(i.group(1), -1) == -1:
+                if Images.get(i.group(1), -1) == -1:  # 不存在这个key时添加，防止重复
                     Images[i.group(1)] = count
                     count = count + 1
             # 复制图像
@@ -351,7 +351,7 @@ class functions(object):
         Text = '<br>' + Text + '<br>'
         Text = re.sub('\n', '', Text)  # 删除回车
 
-        if setupParameters['saveImages'] == 'True':
+        if setupParameters['ConvertImage'] == 'True':
             # 图像标记处理
             os.chdir(os.path.split(Filepath)[0])
             ImgS = re.search(r'\[image](.*?)\[/image]<br>', Text)
@@ -414,7 +414,7 @@ class functions(object):
                 os.chdir(os.path.split(Filepath)[0] + os.sep + dirName)
                 for file in file_list:
                     zipobj.write(file)
-                if setupParameters['saveImages'] == 'True':
+                if setupParameters['ConvertImage'] == 'True':
                     for Image in ImagesZipin:
                         zipobj.write(Image)
         elif mode == 0:
@@ -422,8 +422,9 @@ class functions(object):
                 os.chdir(os.path.split(Filepath)[0] + os.sep + dirName)
                 for file in file_list:
                     zipobj.write(file)
-                for Image in ImagesZipin:
-                    zipobj.write(Image)
+                if setupParameters['ConvertImage'] == 'True':
+                    for Image in ImagesZipin:
+                        zipobj.write(Image)
 
     def readFile(self, site):
         fileData = open(site, mode='rb').read()
