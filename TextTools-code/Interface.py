@@ -16,13 +16,15 @@ import tkinter as tk
 import tkinter.messagebox
 from PIL import Image, ImageTk
 import shutil
+import chardet
 
 subFiles = []
-softName = 'TextTools v1.2'
-versions = 'v1.2'
+softName = 'TextTools v1.3'
+versions = 'v1.3'
 RBforTXTset_save = ''
 Functions = functions()
-setupParameters = {'Passworld': 'ForRuBi', 'login': 'ForRuBi', 'RBmode': 'hiragana', 'saveImages': 'True', 'ConvertImage': 'False', 'Imagescale': '2',
+setupParameters = {'Passworld': 'ForRuBi', 'login': 'ForRuBi', 'RBmode': 'hiragana', 'saveImages': 'True',
+                   'ConvertImage': 'False', 'Imagescale': '2',
                    'w:rFonts': '"Yu Mincho"', 'w:hps': '10', 'w:hpsRaise': '18', 'w:hpsBaseText': '21'}
 setdefault = '''
 login = ForRuBi
@@ -81,13 +83,16 @@ def EPUBtoTXT():
         content = f.readlines()  # 列表，全部读完
         for temp in content:
             if setupParameters['saveImages'] == 'False':
-                temp = re.sub(r'<(img|image).*?(src|href)="(.*?)".*?/>', '<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>', temp)
+                temp = re.sub(r'<(img|image).*?(src|href)="(.*?)".*?/>',
+                              '<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>', temp)
             elif setupParameters['saveImages'] == 'True':
                 htmlFilesPath = re.sub('//', '/',
-                                       re.sub(r'\\', '/', os.path.split(subFiles[i])[0])[len(os.path.split(Filepath)[0]):] + '/')
-                temp = re.sub(r'<(img|image).*?(src|href)="(.*?)".*?/>', r'<p>[image]%s\3[/image]</p>' % htmlFilesPath, temp)  # <img class="fit" src="../image/cover.jpg" alt=""/>
+                                       re.sub(r'\\', '/', os.path.split(subFiles[i])[0])[
+                                       len(os.path.split(Filepath)[0]):] + '/')
+                temp = re.sub(r'<(img|image).*?(src|href)="(.*?)".*?/>', r'<p>[image]%s\3[/image]</p>' % htmlFilesPath,
+                              temp)  # <img class="fit" src="../image/cover.jpg" alt=""/>
                 # <image height="2048" width="1440" xlink:href="../Images/cover00256.jpeg"/>
-                temp = re.sub(r'%s/\.\./' % os.path.split(htmlFilesPath[0:len(htmlFilesPath)-1])[1], r'', temp)
+                temp = re.sub(r'%s/\.\./' % os.path.split(htmlFilesPath[0:len(htmlFilesPath) - 1])[1], r'', temp)
             m.write("%s" % temp)
         f.close
     m.close()
@@ -158,13 +163,16 @@ def EPUBtoDOCX():
         content = f.readlines()  # 列表，全部读完
         for temp in content:
             if setupParameters['saveImages'] == 'False':
-                temp = re.sub(r'<(img|image).*?(src|href)="(.*?)".*?/>', '<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>', temp)
+                temp = re.sub(r'<(img|image).*?(src|href)="(.*?)".*?/>',
+                              '<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>\n<p><br/></p>', temp)
             elif setupParameters['saveImages'] == 'True':
                 htmlFilesPath = re.sub('//', '/',
-                                       re.sub(r'\\', '/', os.path.split(subFiles[i])[0])[len(os.path.split(Filepath)[0]):] + '/')
-                temp = re.sub(r'<(img|image).*?(src|href)="(.*?)".*?/>', r'<p>[image]%s\3[/image]</p>' % htmlFilesPath, temp)  # <img class="fit" src="../image/cover.jpg" alt=""/>
+                                       re.sub(r'\\', '/', os.path.split(subFiles[i])[0])[
+                                       len(os.path.split(Filepath)[0]):] + '/')
+                temp = re.sub(r'<(img|image).*?(src|href)="(.*?)".*?/>', r'<p>[image]%s\3[/image]</p>' % htmlFilesPath,
+                              temp)  # <img class="fit" src="../image/cover.jpg" alt=""/>
                 # <image height="2048" width="1440" xlink:href="../Images/cover00256.jpeg"/>
-                temp = re.sub(r'%s/\.\./' % os.path.split(htmlFilesPath[0:len(htmlFilesPath)-1])[1], r'', temp)
+                temp = re.sub(r'%s/\.\./' % os.path.split(htmlFilesPath[0:len(htmlFilesPath) - 1])[1], r'', temp)
             m.write("%s" % temp)
         f.close
     m.close()
@@ -182,14 +190,16 @@ def EPUBtoDOCX():
         # m0 = re.sub(r'(<span.*?>|</span>|<p>)', r'', m0)
         m0 = re.sub(r'(<a.*?>|</a>|<a>|<sup>|<p>|<br.*?>)', r'', m0)
         m0 = re.sub(r'(<span.*?>|</span>)', r'', m0)
-        m0 = re.sub('<br/>', '', m0)
+        m0 = re.sub('(<br/>|<br />)', '', m0)
         m0 = re.sub('\n', '<br>', m0)
         # m0 = re.sub(r'\(', '（', m0)
         # m0 = re.sub(r'\)', '）', m0)
         mb = ''
         while mb != m0:
             mb = m0
-            m0 = re.sub(r'<ruby.*?>(.*?)<rt.*?>(.*?)</rt>(.*?)</ruby>', r'<Ruby><Rb>\1</Rb><Rp>(</Rp><Rt>\2</Rt><Rp>)</Rp></Ruby><ruby>\3</ruby>', m0)  # <ruby>素<rt>す</rt>晴<rt>ば</rt></ruby>
+            m0 = re.sub(r'<ruby.*?>(.*?)<rt.*?>(.*?)</rt>(.*?)</ruby>',
+                        r'<Ruby><Rb>\1</Rb><Rp>(</Rp><Rt>\2</Rt><Rp>)</Rp></Ruby><ruby>\3</ruby>',
+                        m0)  # <ruby>素<rt>す</rt>晴<rt>ば</rt></ruby>
             m0 = re.sub('(<ruby></ruby>)', '', m0)
         m0 = re.sub('(<rb>|</rb>)', '', m0)
         if m0[:7] != '[image]' or mp != m0 and m0[:7] == '[image]':
@@ -198,6 +208,118 @@ def EPUBtoDOCX():
     # 文字处理完成，写入docx
     Functions.makeDocx(Text, Filepath, 0, setupParameters)
     os.unlink(os.path.split(Filepath)[0] + os.sep + "%s.buffer" % Filename)
+    tk.messagebox.showinfo(title='message', message='Finish')
+
+
+def HTMLtoDOCX():
+    readSet()
+    subFiles.clear()
+    # 文件选择
+    root = tk.Tk()
+    root.withdraw()
+    Filepath = filedialog.askopenfilename()
+
+    File = os.path.split(Filepath)[1]
+    for i in range(len(File) - 1, 0, -1):
+        if File[i] == '.':
+            Filename = File[0:i]
+            break
+    dirName = Filename + '-DOCX'
+    dirPath = os.path.split(Filepath)[0] + os.sep + dirName
+    # 复制docx样本
+    os.chdir(operatingPath)
+    if os.path.exists(dirPath):
+        shutil.rmtree(dirPath)
+        time.sleep(1)
+        shutil.copytree("docxSample", dirPath)
+    else:
+        shutil.copytree("docxSample", dirPath)
+
+    print(Filepath)
+    os.chdir(os.path.split(Filepath)[0])  # 改正工作目录
+    print(Filename)
+
+    # 添加处理文件目录
+    subFiles.append(Filepath)
+    m = u''
+    for i in range(0, len(subFiles)):  # 前闭后开
+        site = "%s" % subFiles[i]
+        fileData = open(site, mode='rb').read()
+        encoded = chardet.detect(fileData)['encoding']
+        print(encoded)
+        f = open(site, encoding=encoded, mode='r')
+        content = f.readlines()  # 列表，全部读完
+        f.close()
+        for item in content:
+            m = m + item
+
+    xm = BeautifulSoup(m, "html.parser")
+    Text = u''
+    for temp in xm.find_all("body"):
+        item = str(temp)
+        item = re.sub(
+            r'(<a.*?>|</a>|<a>|<sup>|<p>|</p>|<br.*?>|</head>|<head>|</ul>|<ul>|</li>|<li>|</body>|<body>|</tr>|<tr>|<td>|</td>)',
+            r'', item)
+        item = re.sub(r'(<span.*?>|</span>|<div.*?>|</div>|<h.*?>|</h.>|<table.*?>|</table>|<script.*?>|</script>)',
+                      r'', item)
+        item = re.sub('\n', '<br>', item)
+        # mb = ''
+        # while mb != item:
+        #     mb = item
+        #     item = re.sub(r'<ruby.*?>(.*?)<rt.*?>(.*?)</rt>(.*?)</ruby>',
+        #                 r'<Ruby><Rb>\1</Rb><Rp>(</Rp><Rt>\2</Rt><Rp>)</Rp></Ruby><ruby>\3</ruby>',
+        #                 item)  # <ruby>素<rt>す</rt>晴<rt>ば</rt></ruby>
+        #     item = re.sub('(<ruby></ruby>)', '', item)
+        # item = re.sub('(<rb>|</rb>)', '', item)
+        Text = Text + item + '<br>'
+    # 文字处理完成，写入docx
+    Text = re.sub('<!--.*?-->', '', Text)
+    Functions.makeDocx(Text, Filepath, 0, setupParameters)
+    tk.messagebox.showinfo(title='message', message='Finish')
+
+
+def HTMLtoTXT():
+    readSet()
+    subFiles.clear()
+    # 文件选择
+    root = tk.Tk()
+    root.withdraw()
+    Filepath = filedialog.askopenfilename()
+
+    File = os.path.split(Filepath)[1]
+    for i in range(len(File) - 1, 0, -1):
+        if File[i] == '.':
+            Filename = File[0:i]
+            break
+    print(Filepath)
+    os.chdir(os.path.split(Filepath)[0])  # 改正工作目录
+    print(Filename)
+
+    # 添加处理文件目录
+    subFiles.append(Filepath)
+    m = u''
+    for i in range(0, len(subFiles)):  # 前闭后开
+        site = "%s" % subFiles[i]
+        fileData = open(site, mode='rb').read()
+        encoded = chardet.detect(fileData)['encoding']
+        print(encoded)
+        f = open(site, encoding=encoded, mode='r')
+        content = f.readlines()  # 列表，全部读完
+        for item in content:
+            m = m + item
+
+    xm = BeautifulSoup(m, "html.parser")
+    Text = u''
+    for temp in xm.find_all("body"):
+        Text = Text + str(temp) + '\n'
+    # 文字处理完成，写入
+    Text = re.sub(r'<rt>.*?</rt>', r'', Text)
+    Text = re.sub(r'<rp>.*?</rp>', r'', Text)
+    Text = re.sub(r'<.*?>', '', Text, flags=re.S)
+    Text = re.sub(r'<|>', '', Text)
+    txt = open('%s.txt' % Filename, encoding='utf-8', mode='w')
+    txt.write(Text)
+    txt.close()
     tk.messagebox.showinfo(title='message', message='Finish')
 
 
@@ -297,27 +419,35 @@ def main():
         lable = tk.Label(window, text=softName, bg='#D6C0CC', font=('Yu Gothic', 12), width=28, height=1)
         # 说明： bg为背景，font为字体，width为长，height为高，这里的长和高是字符的长和高，比如height=2,就是标签有2个字符这么高
         lable.grid(row=0, column=1, columnspan=2)
-
+    # 第一行
     setButton = tk.Button(window, bg='#D6C0CC', compound='top', text='Set', font=('Yu Gothic UI', 8), height=1, width=3,
                           command=setWindow)
     setButton.grid(sticky=tk.E, row=0, column=1, columnspan=2)
 
     window.resizable(0, 0)  # 冻结窗口大小
+    # 第二行
+    b1 = tk.Button(window, text='HTMLtoTXT', font=('Yu Gothic', 8), width=15, height=1,
+                   command=HTMLtoTXT)  # lambda:  传参
+    b1.grid(sticky=tk.E, row=1, column=1)
 
-    b1 = tk.Button(window, text='EPUBtoTXT', font=('Yu Gothic', 8), width=30, height=1,
-                   command=EPUBtoTXT)  # lambda:  传参
-    b1.grid(row=1, column=1, columnspan=2)
-
-    b1_1 = tk.Button(window, text='EPUBtoDOCX', font=('Yu Gothic', 8), width=30, height=1,
+    b1 = tk.Button(window, text='HTMLtoDOCX', font=('Yu Gothic', 8), width=15, height=1,
+                   command=HTMLtoDOCX)  # lambda:  传参
+    b1.grid(sticky=tk.W, row=1, column=2)
+    # 第三行
+    b1_1 = tk.Button(window, text='EPUBtoDOCX', font=('Yu Gothic', 8), width=15, height=1,
                      command=EPUBtoDOCX)  # lambda:  传参
-    b1_1.grid(row=2, column=1, columnspan=2)
+    b1_1.grid(sticky=tk.E, row=2, column=1)
 
-    b2 = tk.Button(window, text='RBforTXT', font=('Yu Gothic', 12), width=10, height=1, command=RBforTXT)
-    b2.grid(sticky=tk.E, column=1, row=3)
+    b1 = tk.Button(window, text='EPUBtoTXT', font=('Yu Gothic', 8), width=15, height=1,
+                   command=EPUBtoTXT)  # lambda:  传参
+    b1.grid(sticky=tk.W, row=2, column=2)
+    # 第四行
+    b2 = tk.Button(window, text='RBforTXT', font=('Yu Gothic', 12), width=9, height=1, command=RBforTXT)
+    b2.grid(sticky=tk.E, row=3, column=1)
 
     global listbox
-    listbox = tk.Listbox(window, bg='#C7F8FC', height=2, width=11)
-    listbox.grid(sticky=tk.W, column=2, row=3)
+    listbox = tk.Listbox(window, bg='#C7F8FC', height=2, width=14)
+    listbox.grid(sticky=tk.W, row=3, column=2)
     listbox.insert('end', 'saveAsDocx')
     listbox.insert('end', 'saveAsTXT')
     listbox.insert('end', 'saveAsHTML')
@@ -410,4 +540,3 @@ def writeSet(property, value):  # 设置 属性，值
 
 if __name__ == "__main__":  # 当程序执行时 调用-->入口
     main()
-    # os.system("taskkill /f /im Interface.exe")

@@ -117,7 +117,7 @@ class functions(object):
                     </w:rubyBase>
                 </w:ruby>
             </w:r>'''
-        self.PerPx = 9525 // int(setupParameters['Imagescale'])
+        self.PerPx = int(9525 / float(setupParameters['Imagescale']))
 
     PerPx = 9525 // 2
     documentxml0 = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -365,12 +365,12 @@ class functions(object):
                 ImgS = re.search(r'\[image](.*?)\[/image]<br>', Text)
 
         Text = self.documentDefault0 + Text + self.documentDefault1  # 拼接头尾
-        Text = re.sub(r'<Ruby><Rb>(.*?)</Rb><Rp>\(</Rp><Rt>(.*?)</Rt><Rp>\)</Rp></Ruby>',
-                      r'%s\2%s\1%s' % (self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text)  # 注音处理1
-        Text = re.sub(r'<ruby><rb>(.*?)</rb><rp>\(</rp><rt>(.*?)</rt><rp>\)</rp></ruby>',
-                      r'%s\2%s\1%s' % (self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text)  # 注音处理2
+        # Text = re.sub(r'<Ruby><Rb>(.*?)</Rb><Rp>[(（]</Rp><Rt>(.*?)</Rt><Rp>[)）]</Rp></Ruby>',
+        #               r'%s\2%s\1%s' % (self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text)  # 注音处理1
+        Text = re.sub(r'<ruby><rb>(.*?)</rb><rp>[(（]</rp><rt>(.*?)</rt><rp>[)）]</rp></ruby>',
+                      r'%s\2%s\1%s' % (self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text, flags=re.I)  # 注音处理2
         Text = re.sub(r'(</w:r>)(.*?)<br>', r'\1%s\2%s%s' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n       </w:p>'),
-                      Text)  # </w:r><br/>  行结尾\n处理
+                      Text)  # </w:r><br>  行结尾\n处理
         Text = re.sub('<br>', '\n<w:p/>', Text)
         Text = re.sub('(</w:r>)(.*?)(\n            <w:pPr>)', r'\1%s\2%s\3' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1),
                       Text)  # </w:r>の\n<w:pPr>  行内部处理
@@ -390,7 +390,7 @@ class functions(object):
         Text = re.sub('<w:p/>(.+)\n            <w:p>',
                       r'<w:p/><w:p>%s\1%s%s<w:p>' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
                       Text)  # 无注音单行处理4
-        if setupParameters['saveImages'] == 'True':
+        if setupParameters['ConvertImage'] == 'True':
             Text = re.sub('</w:p>(.+)\n            <w:p>',
                           r'</w:p><w:p>%s\1%s%s<w:p>' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
                           Text)  # 无注音单行处理5
@@ -469,7 +469,6 @@ class functions(object):
                         i = ((re.search('href="(.*?)"', item)).groups())[0]
                         if str(i[-6:]).lower() == ".xhtml" or str(i[-5:]).lower() == ".html":
                             subFiles.append(os.path.abspath('.') + os.sep + str(i))
-
         return content
 
     def findXhtml(self, dir1, subFiles=[]):
@@ -559,6 +558,7 @@ class functions(object):
             print(str(int(progress / progressSum * 100)) + r'%')
         wd.close()
         os.system("taskkill /f /im chromedriver.exe")
+        txt = re.sub('&nbsp;', ' ',  txt)
         return txt
 
     def segmentation(self, text, maxSet=50000):  # 分割成转换字符数上限
