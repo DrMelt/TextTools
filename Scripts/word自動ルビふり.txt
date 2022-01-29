@@ -1,0 +1,80 @@
+Option Explicit
+  
+Public Sub Sample01()
+'選択した範囲内の文字列にルビ設定
+  SetPhoneticRange Selection.Range
+End Sub
+ 
+Public Sub Sample02()
+'文書全体にルビ設定
+  SetPhoneticRange ActiveDocument.Range
+End Sub
+ 
+Private Sub SetPhoneticRange(ByVal rng As Word.Range)
+'指定した範囲のルビ一括設定
+  Dim r As Word.Range
+  
+  '単語単位で処理
+  For Each r In rng.Words
+    'ルビが振られていないか最初にフィールド数で判定
+    If r.Fields.Count < 1 Then
+      If ChkKanjiRange(r) = True Then
+        r.Select
+        Application.Dialogs(wdDialogPhoneticGuide).Show 1
+      End If
+    End If
+  Next
+  
+  '文字単位で処理
+  For Each r In rng.Characters
+    'ルビが振られていないか最初にフィールド数で判定
+    If r.Fields.Count < 1 Then
+      If ChkKanjiRange(r) = True Then
+        r.Select
+        Application.Dialogs(wdDialogPhoneticGuide).Show 1
+      End If
+    End If
+  Next
+End Sub
+  
+Private Function ChkKanjiRange(ByVal rng As Word.Range) As Boolean
+'指定したRangeが漢字のみかチェック
+  Dim ret As Boolean
+  Dim i As Long
+   
+  ret = True
+  For i = 1 To Len(rng.Text)
+    If IsKanji(Mid(rng.Text, i, 1)) = False Then
+      ret = False
+      Exit For
+    End If
+  Next
+  ChkKanjiRange = ret
+End Function
+  
+Private Function IsKanji(ByVal char As String) As Boolean
+'漢字判別
+'※ 参考Webページ
+' - http://www.taishukan.co.jp/kokugo/webkoku/series003_04.html
+' - http://en.wikipedia.org/wiki/CJK_Unified_Ideographs_%28Unicode_block%29
+' - http://www.asahi-net.or.jp/~ax2s-kmtn/ref/unicode/e_asia.html
+' - http://www.gsid.nagoya-u.ac.jp/ohna/notes/nu/regex4kanji2.txt
+' - http://support.microsoft.com/kb/161304/ja
+  Dim cc As Variant
+  Dim ret As Boolean
+   
+  ret = True '初期化
+  cc = Val("&H" & Hex(AscW(char)) & "&")
+  Select Case cc
+    Case 63744 To 64255   'CJK互換漢字(U+F900-U+FAFF)
+    Case 13312 To 19903   'CJK統合漢字拡張A(U+3400-U+4DBF)
+    Case 19968 To 40959   'CJK統合漢字(U+4E00-U+9FFF)
+    Case 131072 To 173791 'CJK統合漢字拡張B(U+20000-U+2A6DF)
+    Case 173824 To 177983 'CJK統合漢字拡張C(U+2A700-U+2B73F)
+    Case 177984 To 178207 'CJK統合漢字拡張D(U+2B740-U+2B81F)
+    Case 194560 To 195103 'CJK互換漢字補助(U+2F800-U+2FA1F)
+    Case Else
+      ret = False
+  End Select
+  IsKanji = ret
+End Function
