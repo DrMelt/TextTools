@@ -318,12 +318,15 @@ class functions(object):
         dirPath = os.path.split(Filepath)[0] + os.sep + dirName
 
         if setupParameters['ConvertImage'] == 'True':
+            Text = re.sub(r'［＃挿絵（(.*?)）入る］', r'[image]/\1[/image]', Text, re.M)  # 转换青空文库标记
+            Text = re.sub(r'〝', r'『', Text, re.M)  # 转换青空文库『』
+            Text = re.sub(r'〟', r'』', Text, re.M)  # 转换青空文库『』
             # 读取图像地址
             Images = {}
             ImagesZipin = []
             ImagesRelsin = {}
             count = 1
-            for i in re.finditer(r'\[image](.*?)\[/image]', Text):
+            for i in re.finditer(r'\[image](.*?)\[/image]', Text, re.M):
                 if Images.get(i.group(1), -1) == -1:  # 不存在这个key时添加，防止重复
                     Images[i.group(1)] = count
                     count = count + 1
@@ -354,21 +357,38 @@ class functions(object):
         if setupParameters['ConvertImage'] == 'True':
             # 图像标记处理
             os.chdir(os.path.split(Filepath)[0])
-            ImgS = re.search(r'\[image](.*?)\[/image]<br>', Text)
+
+            ImgS = re.search(r'\[image](.*?)\[/image]<br>', Text, re.M)
             while ImgS is not None:
-                imgPath = re.sub(r'<ruby><rb>(.*?)</rb><rp>\(</rp><rt>(.*?)</rt><rp>\)</rp></ruby>', r'\1', ImgS.group(1))
-                img = Im.open('.'+imgPath)
+                imgPath = ImgS.group(1)
+                img = Im.open('.' + imgPath)
                 w = img.width  # 图片的宽
                 h = img.height  # 图片的高
                 Text = Text[:ImgS.start()] + '%s%s" cy="%s%s%s%s%s" cy="%s%s' % (
-                    self.DOCXmark_Img0, w*self.PerPx, h*self.PerPx, self.DOCXmark_Img1, Images[Text[ImgS.start(1):ImgS.end(1)]], self.DOCXmark_Img2, w*self.PerPx, h*self.PerPx, self.DOCXmark_Img3) + Text[ImgS.end():]
-                ImgS = re.search(r'\[image](.*?)\[/image]<br>', Text)
+                    self.DOCXmark_Img0, w * self.PerPx, h * self.PerPx, self.DOCXmark_Img1,
+                    Images[Text[ImgS.start(1):ImgS.end(1)]], self.DOCXmark_Img2, w * self.PerPx, h * self.PerPx,
+                    self.DOCXmark_Img3) + Text[ImgS.end():]
+                ImgS = re.search(r'\[image](.*?)\[/image]<br>', Text, re.M)
+
+            # ImgS = re.search(r'［＃.*?（(.*?)）.*?］', Text, re.M)
+            # while ImgS is not None:
+            #     imgPath = ImgS.group(1)
+            #     imgPath = '/' + imgPath
+            #     img = Im.open('.' + imgPath)
+            #     w = img.width  # 图片的宽
+            #     h = img.height  # 图片的高
+            #     Text = Text[:ImgS.start()] + '%s%s" cy="%s%s%s%s%s" cy="%s%s' % (
+            #         self.DOCXmark_Img0, w * self.PerPx, h * self.PerPx, self.DOCXmark_Img1,
+            #         Images[Text[ImgS.start(1):ImgS.end(1)]], self.DOCXmark_Img2, w * self.PerPx, h * self.PerPx,
+            #         self.DOCXmark_Img3) + Text[ImgS.end():]
+            #     ImgS = re.search(r'［＃.*?（(.*?)）.*?］', Text, re.M)
 
         Text = self.documentDefault0 + Text + self.documentDefault1  # 拼接头尾
         # Text = re.sub(r'<Ruby><Rb>(.*?)</Rb><Rp>[(（]</Rp><Rt>(.*?)</Rt><Rp>[)）]</Rp></Ruby>',
         #               r'%s\2%s\1%s' % (self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text)  # 注音处理1
         Text = re.sub(r'<ruby><rb>(.*?)</rb><rp>[(（]</rp><rt>(.*?)</rt><rp>[)）]</rp></ruby>',
-                      r'%s\2%s\1%s' % (self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text, flags=re.I)  # 注音处理2
+                      r'%s\2%s\1%s' % (self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text,
+                      flags=re.I)  # 注音处理2
         Text = re.sub(r'(</w:r>)(.*?)<br>', r'\1%s\2%s%s' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n       </w:p>'),
                       Text)  # </w:r><br>  行结尾\n处理
         Text = re.sub('<br>', '\n<w:p/>', Text)
@@ -395,8 +415,8 @@ class functions(object):
                           r'</w:p><w:p>%s\1%s%s<w:p>' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
                           Text)  # 无注音单行处理5
             Text = re.sub('</w:r>(.*?)\n            <w:p>',
-                      r'</w:r>%s\1%s%s<w:p>' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
-                      Text)  # 无注音单行处理6
+                          r'</w:r>%s\1%s%s<w:p>' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
+                          Text)  # 无注音单行处理6
 
         Text = re.sub('</w:r>\n<w:p/>', r'</w:r></w:p>', Text)  # 末处理 </w:r>\n<w:p/>
         Text = re.sub('<w:body>\n<w:p/>', '<w:body>', Text)  # 修剪开头空格
@@ -507,6 +527,25 @@ class functions(object):
                 progress_make += 1
 
         txt = re.sub('\n', '<br>\n', txt)
+        txt = re.sub(r'(［＃.*?］)', r'\1'+'\n', txt)  # 防止两个标志之间的注音被消除
+
+        temp = re.search(r'［＃.*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?］', txt, re.M)
+        while temp is not None:
+            txt = txt[:temp.start(1)]+txt[temp.end(1):]
+            temp = re.search(r'［＃.*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?］', txt, re.M)
+        temp = re.search(r'［＃.*?(<ruby><rb>).*?］', txt, re.M)
+        while temp is not None:
+            txt = txt[:temp.start(1)]+txt[temp.end(1):]
+            temp = re.search(r'［＃.*?(<ruby><rb>).*?］', txt, re.M)
+
+        temp = re.search(r'\[image].*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?\[/image]', txt, re.M)
+        while temp is not None:
+            txt = txt[:temp.start(1)]+txt[temp.end(1):]
+            temp = re.search(r'\[image].*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?\[/image]', txt, re.M)
+        temp = re.search(r'\[image].*?(<ruby><rb>).*?\[/image]', txt, re.M)
+        while temp is not None:
+            txt = txt[:temp.start(1)]+txt[temp.end(1):]
+            temp = re.search(r'\[image].*?(<ruby><rb>).*?\[/image]', txt, re.M)
         return txt
 
     def getRB(self, Text, operatingPath, setupParameters):
@@ -558,7 +597,28 @@ class functions(object):
             print(str(int(progress / progressSum * 100)) + r'%')
         wd.close()
         os.system("taskkill /f /im chromedriver.exe")
-        txt = re.sub('&nbsp;', ' ',  txt)
+        txt = re.sub('&nbsp;', ' ', txt)
+        txt = re.sub(r'<br>', '<br>\n', txt)
+        txt = re.sub(r'(［＃.*?］)', r'\1'+'\n', txt)  # 防止两个标志之间的注音被消除
+
+        temp = re.search(r'［＃.*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?］', txt, re.M)
+        while temp is not None:
+            txt = txt[:temp.start(1)]+txt[temp.end(1):]
+            temp = re.search(r'［＃.*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?］', txt, re.M)
+        temp = re.search(r'［＃.*?(<ruby><rb>).*?］', txt, re.M)
+        while temp is not None:
+            txt = txt[:temp.start(1)]+txt[temp.end(1):]
+            temp = re.search(r'［＃.*?(<ruby><rb>).*?］', txt, re.M)
+
+        temp = re.search(r'\[image].*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?\[/image]', txt, re.M)
+        while temp is not None:
+            txt = txt[:temp.start(1)]+txt[temp.end(1):]
+            temp = re.search(r'\[image].*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?\[/image]', txt, re.M)
+        temp = re.search(r'\[image].*?(<ruby><rb>).*?\[/image]', txt, re.M)
+        while temp is not None:
+            txt = txt[:temp.start(1)]+txt[temp.end(1):]
+            temp = re.search(r'\[image].*?(<ruby><rb>).*?\[/image]', txt, re.M)
+
         return txt
 
     def segmentation(self, text, maxSet=50000):  # 分割成转换字符数上限
