@@ -17,10 +17,11 @@ import tkinter.messagebox
 from PIL import Image, ImageTk
 import shutil
 import chardet
+import zipfile
 
 subFiles = []
-softName = 'TextTools v1.3'
-versions = 'v1.3'
+softName = 'TextTools v1.4'
+versions = 'v1.4'
 RBforTXTset_save = ''
 Functions = functions()
 setupParameters = {'Passworld': 'ForRuBi', 'login': 'ForRuBi', 'RBmode': 'hiragana', 'saveImages': 'True',
@@ -115,7 +116,7 @@ def EPUBtoTXT():
             result.write(str(m0) + "\n")  # 写入result
         mp = m0
     result.close()
-    tk.messagebox.showinfo(title='message', message='Finish')
+    tk.messagebox.showinfo(title='message', message='Finished')
 
 
 def EPUBtoDOCX():
@@ -208,7 +209,7 @@ def EPUBtoDOCX():
     # 文字处理完成，写入docx
     Functions.makeDocx(Text, Filepath, 0, setupParameters)
     os.unlink(os.path.split(Filepath)[0] + os.sep + "%s.buffer" % Filename)
-    tk.messagebox.showinfo(title='message', message='Finish')
+    tk.messagebox.showinfo(title='message', message='Finished')
 
 
 def HTMLtoDOCX():
@@ -275,7 +276,7 @@ def HTMLtoDOCX():
     # 文字处理完成，写入docx
     Text = re.sub('<!--.*?-->', '', Text)
     Functions.makeDocx(Text, Filepath, 0, setupParameters)
-    tk.messagebox.showinfo(title='message', message='Finish')
+    tk.messagebox.showinfo(title='message', message='Finished')
 
 
 def HTMLtoTXT():
@@ -320,7 +321,7 @@ def HTMLtoTXT():
     txt = open('%s.txt' % Filename, encoding='utf-8', mode='w')
     txt.write(Text)
     txt.close()
-    tk.messagebox.showinfo(title='message', message='Finish')
+    tk.messagebox.showinfo(title='message', message='Finished')
 
 
 def RBforTXT():
@@ -338,9 +339,11 @@ def RBforTXT():
 
     print('\n')
     print(Filepath)
+    print('\n')
     os.chdir(os.path.split(Filepath)[0])  # 改正工作目录
     Filename = (os.path.split(Filepath)[1])[0:len(os.path.split(Filepath)[1]) - 4]
     print(Filename)
+    print('\n')
 
     fromText = functions().readFile(Filepath)
     if RBforTXTsave == 'saveAsTXT':
@@ -381,7 +384,56 @@ def RBforTXT():
         elif setupParameters['RBmode'] == 'pykakasi':
             text = functions().getRB_withoutInternet(fromText)
         Functions.makeDocx(text, Filepath, 1, setupParameters)
-        tk.messagebox.showinfo(title='message', message='Finish')
+        tk.messagebox.showinfo(title='message', message='Finished')
+
+
+def RBforDOCX():
+    readSet()
+
+    # 文件选择
+    root = tk.Tk()
+    root.withdraw()
+    Filepath = filedialog.askopenfilename(filetypes=[('DOCX', '*.docx')])
+
+    print('\n')
+    print(Filepath)
+    os.chdir(os.path.split(Filepath)[0])  # 改正工作目录
+    Filename = (os.path.split(Filepath)[1])[0:len(os.path.split(Filepath)[1]) - 5]
+    print(Filename)
+
+    # 解压DOCX
+    zfile = zipfile.ZipFile(Filepath, "r")
+    zfile.extractall(os.path.split(Filepath)[0]+os.sep+Filename+'-RuBy')
+    zfile.close()
+
+    # 获取文本
+    testPath = os.path.split(Filepath)[0]+os.sep+Filename+'-RuBy'+os.sep+'word'+os.sep+'document.xml'
+    testFile = open(testPath, encoding='utf-8', mode='r')
+    Otext = testFile.read()
+    testFile.close()
+
+    # 获取注音
+    if setupParameters['RBmode'] == 'hiragana':
+        text = functions().getRB(Otext, operatingPath, setupParameters, RBforDOCX=True)
+    elif setupParameters['RBmode'] == 'pykakasi':
+        text = functions().getRB_withoutInternet(Otext, RBforDOCX=True)
+
+    # 整理格式
+    text = re.sub('<br>', '', text)
+    text = functions().RuByforDocxConformityToXML(text)
+    open(testPath, encoding='utf-8', mode='w').write(text)
+
+    # 打包DOCX
+    file_list = []
+    functions().ListAllFiles(dir=os.path.split(Filepath)[0]+os.sep+Filename+'-RuBy', file_list=file_list)
+    os.chdir(os.path.split(Filepath)[0])
+    with zipfile.ZipFile('%s-RuBy.docx' % Filename, 'w') as zipobj:
+        os.chdir(os.path.split(Filepath)[0] + os.sep + Filename+'-RuBy')
+        for file in file_list:
+            zipobj.write(file)
+        zipobj.close()
+
+    tk.messagebox.showinfo(title='message', message='Finished')
 
 
 def windowColse():
@@ -442,15 +494,20 @@ def main():
                    command=EPUBtoTXT)  # lambda:  传参
     b1.grid(sticky=tk.W, row=2, column=2)
     # 第四行
-    b2 = tk.Button(window, text='RBforTXT', font=('Yu Gothic', 12), width=9, height=1, command=RBforTXT)
+    b2 = tk.Button(window, text='RBforTXT', font=('Yu Gothic', 8), width=15, height=1, command=RBforTXT)
     b2.grid(sticky=tk.E, row=3, column=1)
 
     global listbox
-    listbox = tk.Listbox(window, bg='#C7F8FC', height=2, width=14)
+    listbox = tk.Listbox(window, bg='#C7F8FC', height=1, width=14)
     listbox.grid(sticky=tk.W, row=3, column=2)
     listbox.insert('end', 'saveAsDocx')
     listbox.insert('end', 'saveAsTXT')
     listbox.insert('end', 'saveAsHTML')
+
+    # 第五行
+    b1 = tk.Button(window, text='RBforDOCX', font=('Yu Gothic', 8), width=32, height=1,
+                   command=RBforDOCX)  # lambda:  传参
+    b1.grid(row=4, column=1, columnspan=2)
 
     # lable3 = tk.Label(window, text='Need Chrome', bg='#C7F8FC', fg='#A02A3F', font=('Yu Gothic', 8), width=13, height=1)
     # lable3.grid(row=3, column=1, columnspan=2)
