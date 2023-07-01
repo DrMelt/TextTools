@@ -27,7 +27,7 @@ Functions = functions()
 setupParameters = {'Passworld': 'ForRuBi', 'login': 'ForRuBi', 'RBmode': 'hiragana', 'saveImages': 'True',
                    'ConvertImage': 'False', 'Imagescale': '2',
                    'w:rFonts': '"Yu Mincho"', 'w:hps': '10', 'w:hpsRaise': '18', 'w:hpsBaseText': '21'}
-setdefault = '''
+setting_default = '''
 login = ForRuBi
 Passworld = ForRuBi
 RBmode = hiragana
@@ -202,7 +202,7 @@ def EPUBtoDOCX():
                         r'<Ruby><Rb>\1</Rb><Rp>(</Rp><Rt>\2</Rt><Rp>)</Rp></Ruby><ruby>\3</ruby>',
                         m0)  # <ruby>素<rt>す</rt>晴<rt>ば</rt></ruby>
             m0 = re.sub('(<ruby></ruby>)', '', m0)
-        m0 = re.sub('(<rb>|</rb>)', '', m0)
+        m0 = re.sub('(<rb.*?>|</rb>)', '', m0)
         if m0[:7] != '[image]' or mp != m0 and m0[:7] == '[image]':
             Text = Text + m0 + '<br>'
         mp = m0
@@ -570,7 +570,7 @@ def readSet():
         configuration.close()
     else:
         configuration = open('configuration', encoding='utf-8', mode='w')
-        configuration.write(setdefault)
+        configuration.write(setting_default)
         configuration.close()
         readSet()
 
@@ -590,7 +590,7 @@ def writeSet(property, value):  # 设置 属性，值
         readSet()
     else:
         configuration = open('configuration', encoding='utf-8', mode='w')
-        configuration.write(setdefault)
+        configuration.write(setting_default)
         configuration.close()
         writeSet(property, value)
 
