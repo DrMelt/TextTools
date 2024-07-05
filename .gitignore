@@ -6,8 +6,8 @@
 /TextTools-code/Interface.spec
 /.venv/
 
-TextTools-code/Interface.build
-TextTools-code/Interface.dist
-TextTools-code/Interface.onefile-build
+Interface.build
+# Interface.dist
+Interface.onefile-build
 Interface.exe
 TextTools.exe
