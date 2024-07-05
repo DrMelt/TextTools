@@ -7,7 +7,7 @@
 /.venv/
 
 Interface.build
-# Interface.dist
+Interface.dist
 Interface.onefile-build
 Interface.exe
 TextTools.exe
