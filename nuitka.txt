@@ -1,0 +1,3 @@
+nuitka编译指令
+
+nuitka --mingw64 --standalone --onefile --nofollow-imports --follow-import-to=Functions --windows-icon-from-ico=TextTools-code/favicon.ico --plugin-enable=tk-inter --include-data-dir=./.venv/Lib/site-packages/pykakasi/data=pykakasi/data --output-filename=TextTools.exe  TextTools-code/Interface.py

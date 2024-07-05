@@ -11,7 +11,6 @@ import epub
 from bs4 import BeautifulSoup
 import re
 import os
-from Functions.functions import functions
 import tkinter as tk
 import tkinter.messagebox
 from PIL import Image, ImageTk
@@ -19,9 +18,12 @@ import shutil
 import chardet
 import zipfile
 
+from Functions.functions import functions
+
+
 subFiles = []
-softName = 'TextTools v1.4'
-versions = 'v1.4'
+version = 'v1.5'
+softName = 'TextTools ' + version
 RBforTXTset_save = ''
 Functions = functions()
 setupParameters = {'Passworld': 'ForRuBi', 'login': 'ForRuBi', 'RBmode': 'hiragana', 'saveImages': 'True',
@@ -52,7 +54,7 @@ handle = {"setWindow": 0}
 
 
 def EPUBtoTXT():
-    readSet()
+    readSettings()
     subFiles.clear()
     # 文件夹选择
     root = tk.Tk()
@@ -120,7 +122,7 @@ def EPUBtoTXT():
 
 
 def EPUBtoDOCX():
-    readSet()
+    readSettings()
     subFiles.clear()
     # 文件夹选择
     root = tk.Tk()
@@ -213,7 +215,7 @@ def EPUBtoDOCX():
 
 
 def HTMLtoDOCX():
-    readSet()
+    readSettings()
     subFiles.clear()
     # 文件选择
     root = tk.Tk()
@@ -280,7 +282,7 @@ def HTMLtoDOCX():
 
 
 def HTMLtoTXT():
-    readSet()
+    readSettings()
     subFiles.clear()
     # 文件选择
     root = tk.Tk()
@@ -325,7 +327,7 @@ def HTMLtoTXT():
 
 
 def RBforTXT():
-    readSet()
+    readSettings()
     value = listbox.get(listbox.curselection())  # 获取当前选中的文本
     RBforTXTsave = value  # 为label设置值
     if RBforTXTsave == '':
@@ -351,7 +353,7 @@ def RBforTXT():
         if setupParameters['RBmode'] == 'hiragana':
             text = functions().getRB(fromText, operatingPath, setupParameters)
         elif setupParameters['RBmode'] == 'pykakasi':
-            text = functions().getRB_withoutInternet(fromText)
+            text = functions().getRB_with_pykakasi(fromText)
         text = re.sub(r'<.*?>', '', text)
         m.write(text)  # 写入
         m.close()
@@ -362,7 +364,7 @@ def RBforTXT():
         if setupParameters['RBmode'] == 'hiragana':
             text = functions().getRB(fromText, operatingPath, setupParameters)
         elif setupParameters['RBmode'] == 'pykakasi':
-            text = functions().getRB_withoutInternet(fromText)
+            text = functions().getRB_with_pykakasi(fromText)
         m.write(text)  # 写入
         m.close()
         tk.messagebox.showinfo(title='message', message='Finish')
@@ -382,13 +384,13 @@ def RBforTXT():
         if setupParameters['RBmode'] == 'hiragana':
             text = functions().getRB(fromText, operatingPath, setupParameters)
         elif setupParameters['RBmode'] == 'pykakasi':
-            text = functions().getRB_withoutInternet(fromText)
+            text = functions().getRB_with_pykakasi(fromText)
         Functions.makeDocx(text, Filepath, 1, setupParameters)
         tk.messagebox.showinfo(title='message', message='Finished')
 
 
 def RBforDOCX():
-    readSet()
+    readSettings()
 
     # 文件选择
     root = tk.Tk()
@@ -407,21 +409,21 @@ def RBforDOCX():
     zfile.close()
 
     # 获取文本
-    testPath = os.path.split(Filepath)[0]+os.sep+Filename+'-RuBy'+os.sep+'word'+os.sep+'document.xml'
-    testFile = open(testPath, encoding='utf-8', mode='r')
-    Otext = testFile.read()
+    textPath = os.path.split(Filepath)[0]+os.sep+Filename+'-RuBy'+os.sep+'word'+os.sep+'document.xml'
+    testFile = open(textPath, encoding='utf-8', mode='r')
+    origin_text = testFile.read()
     testFile.close()
 
     # 获取注音
     if setupParameters['RBmode'] == 'hiragana':
-        text = functions().getRB(Otext, operatingPath, setupParameters, RBforDOCX=True)
+        text = functions().getRB(origin_text, operatingPath, setupParameters, RBforDOCX=True)
     elif setupParameters['RBmode'] == 'pykakasi':
-        text = functions().getRB_withoutInternet(Otext, RBforDOCX=True)
+        text = functions().getRB_with_pykakasi(origin_text, RBforDOCX=True)
 
     # 整理格式
     text = re.sub('<br>', '', text)
     text = functions().RuByforDocxConformityToXML(text)
-    open(testPath, encoding='utf-8', mode='w').write(text)
+    open(textPath, encoding='utf-8', mode='w').write(text)
 
     # 打包DOCX
     file_list = []
@@ -445,7 +447,7 @@ def main():
     print('\n' + os.path.abspath('.'))
     global operatingPath
     operatingPath = os.path.abspath(".")  # 记录程序路径
-    readSet()
+    readSettings()
     global window
     window = tk.Tk()
     window.title(softName)
@@ -530,7 +532,7 @@ def setWindowClose():
 def setWindow():
     if handle["setWindow"] == 0:
         handle["setWindow"] = 1
-        readSet()
+        readSettings()
         global setwindow
         setwindow = tk.Tk()  # 导入tkinter中的tk模块
         setwindow.title('Set')
@@ -542,10 +544,10 @@ def setWindow():
         RBmodeV = tk.StringVar()
         # RBmodeV.set(value=setupParameters['RBmode'])
         RBmode0 = tk.Radiobutton(setwindow, text='RBwith hiragana.jp', value='hiragana',
-                                 variable=RBmodeV, command=lambda: writeSet('RBmode', 'hiragana'))
+                                 variable=RBmodeV, command=lambda: writeSettings('RBmode', 'hiragana'))
         RBmode0.pack()
         RBmode1 = tk.Radiobutton(setwindow, text='RBwith Pykakasi', value='pykakasi',
-                                 variable=RBmodeV, command=lambda: writeSet('RBmode', 'pykakasi'))
+                                 variable=RBmodeV, command=lambda: writeSettings('RBmode', 'pykakasi'))
         RBmode1.pack()
         if setupParameters['RBmode'] == 'hiragana':
             RBmode0.select()
@@ -556,7 +558,7 @@ def setWindow():
         setwindow.mainloop()
 
 
-def readSet():
+def readSettings():
     os.chdir(operatingPath)
     if os.path.exists('configuration'):
         configuration = open('configuration', encoding='utf-8', mode='r')
@@ -572,10 +574,10 @@ def readSet():
         configuration = open('configuration', encoding='utf-8', mode='w')
         configuration.write(setting_default)
         configuration.close()
-        readSet()
+        readSettings()
 
 
-def writeSet(property, value):  # 设置 属性，值
+def writeSettings(property, value):  # 设置 属性，值
     lines = []
     if os.path.exists('configuration'):
         configuration = open('configuration', encoding='utf-8', mode='r')
@@ -587,12 +589,12 @@ def writeSet(property, value):  # 设置 属性，值
         for item in lines:
             configuration.write(item)
         configuration.close()
-        readSet()
+        readSettings()
     else:
         configuration = open('configuration', encoding='utf-8', mode='w')
         configuration.write(setting_default)
         configuration.close()
-        writeSet(property, value)
+        writeSettings(property, value)
 
 
 if __name__ == "__main__":  # 当程序执行时 调用-->入口

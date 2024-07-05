@@ -325,10 +325,12 @@ class functions(object):
     def makeDocx(self, Text, Filepath, mode=0, setupParameters={}):
         self.setWord(setupParameters)  # 应用设置
         if mode == 1:
-            Filename = (os.path.split(Filepath)[1])[0:len(os.path.split(Filepath)[1]) - 4]
+            Filename = (os.path.split(Filepath)[1])[
+                0:len(os.path.split(Filepath)[1]) - 4]
             dirName = Filename + '(RuBi)-DOCX'
         elif mode == 0:
-            Filename = (os.path.split(Filepath)[1])[0:len(os.path.split(Filepath)[1]) - 5]
+            Filename = (os.path.split(Filepath)[1])[
+                0:len(os.path.split(Filepath)[1]) - 5]
             dirName = Filename + '-DOCX'
         dirPath = os.path.split(Filepath)[0] + os.sep + dirName
 
@@ -345,18 +347,22 @@ class functions(object):
             # 复制图像
             os.chdir(os.path.split(Filepath)[0])
             for i in list(Images.keys()):
-                ImagePath = 'media/image' + str(Images[i]) + re.search(r'\..*', os.path.split(i)[1]).group()
+                ImagePath = 'media/image' + \
+                    str(Images[i]) + re.search(r'\..*',
+                                               os.path.split(i)[1]).group()
                 ImagesZipin.append('word/' + ImagePath)
                 ImagesRelsin[ImagePath] = Images[i]
-                i = re.sub(r'<ruby><rb>(.*?)</rb><rp>\(</rp><rt>(.*?)</rt><rp>\)</rp></ruby>', r'\1', i)
-                shutil.copyfile(os.path.abspath('.' + i), os.path.abspath('./' + dirName + '/word/' + ImagePath))
+                i = re.sub(
+                    r'<ruby><rb>(.*?)</rb><rp>\(</rp><rt>(.*?)</rt><rp>\)</rp></ruby>', r'\1', i)
+                shutil.copyfile(os.path.abspath(
+                    '.' + i), os.path.abspath('./' + dirName + '/word/' + ImagePath))
             # 注册图像
             os.chdir(dirPath + '/word/_rels')
             rels = open('document.xml.rels', mode='w', encoding='utf-8')
             rels.write(self.documentxml0)
             for item in list(ImagesRelsin.keys()):
                 rels.write('    <Relationship Id="IrId' + str(ImagesRelsin[
-                                                                  item]) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="' + item + '"/>\n')
+                    item]) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="' + item + '"/>\n')
             rels.write(self.documentxml1)
             rels.close()
 
@@ -365,7 +371,8 @@ class functions(object):
         docx = open('document.xml', encoding='utf-8', mode='w')
         Text = '<br>' + Text + '<br>'
         Text = re.sub('\n', '', Text)  # 删除回车
-        Text = re.sub(r'［＃挿絵（(.*?)）入る］', r'[image]/\1[/image]', Text, re.M)  # 转换青空文库标记
+        Text = re.sub(r'［＃挿絵（(.*?)）入る］',
+                      r'[image]/\1[/image]', Text, re.M)  # 转换青空文库标记
         Text = re.sub(r'〝', r'『', Text)  # 转换青空文库『』
         Text = re.sub(r'〟', r'』', Text)  # 转换青空文库『』
 
@@ -381,7 +388,8 @@ class functions(object):
                 h = img.height  # 图片的高
                 Text = Text[:ImgS.start()] + '%s%s" cy="%s%s%s%s%s" cy="%s%s' % (
                     self.DOCXmark_Img0, w * self.PerPx, h * self.PerPx, self.DOCXmark_Img1,
-                    Images[Text[ImgS.start(1):ImgS.end(1)]], self.DOCXmark_Img2, w * self.PerPx, h * self.PerPx,
+                    Images[Text[ImgS.start(1):ImgS.end(
+                        1)]], self.DOCXmark_Img2, w * self.PerPx, h * self.PerPx,
                     self.DOCXmark_Img3) + Text[ImgS.end():]
                 ImgS = re.search(r'\[image](.*?)\[/image]<br>', Text, re.M)
 
@@ -402,7 +410,8 @@ class functions(object):
         # Text = re.sub(r'<Ruby><Rb>(.*?)</Rb><Rp>[(（]</Rp><Rt>(.*?)</Rt><Rp>[)）]</Rp></Ruby>',
         #               r'%s\2%s\1%s' % (self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text)  # 注音处理1
         Text = re.sub(r'<ruby><rb>(.*?)</rb><rp>[(（]</rp><rt>(.*?)</rt><rp>[)）]</rp></ruby>',
-                      r'%s\2%s\1%s' % (self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text,
+                      r'%s\2%s\1%s' % (
+                          self.DOCXmark_RB0, self.DOCXmark_RB1, self.DOCXmark_RB2), Text,
                       flags=re.I)  # 注音处理2
         Text = re.sub(r'(</w:r>)(.*?)<br>', r'\1%s\2%s%s' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n       </w:p>'),
                       Text)  # </w:r><br>  行结尾\n处理
@@ -412,28 +421,36 @@ class functions(object):
         # Text = re.sub('</w:p>(.+)', r'</w:p><w:p>%s\1%s</w:p>' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1), Text)  # 无注音单行处理1         </w:p>「はあ……、そうなんですか」
         Text = re.sub('</w:p>(.+)', r'</w:p><w:p>%s\1%s' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1),
                       Text)  # 无注音单行处理1         </w:p>「はあ……、そうなんですか」
-        Text = re.sub('<w:p/>\n            <w:pPr>', '<w:p/>\n\n        <w:p>\n            <w:pPr>', Text)  # 行开头处理1
+        Text = re.sub('<w:p/>\n            <w:pPr>',
+                      '<w:p/>\n\n        <w:p>\n            <w:pPr>', Text)  # 行开头处理1
         Text = re.sub('(<w:p/>)(.*?)(\n            <w:pPr>)',
                       r'\1<w:p>%s\2%s\3' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1), Text)  # 行开头处理2
-        Text = re.sub('</w:p>\n            <w:pPr>', '</w:p>\n\n        <w:p>\n            <w:pPr>', Text)  # 行开头处理3
+        Text = re.sub('</w:p>\n            <w:pPr>',
+                      '</w:p>\n\n        <w:p>\n            <w:pPr>', Text)  # 行开头处理3
         Text = re.sub('<w:p/>(.+)\n<w:p/>',
-                      r'<w:p/><w:p>%s\1%s%s' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
+                      r'<w:p/><w:p>%s\1%s%s' % (self.DOCXmark_TXT0,
+                                                self.DOCXmark_TXT1, '\n        </w:p>'),
                       Text)  # 无注音单行处理2         <w:p/>○\n<w:p/>
         Text = re.sub('</w:p>(.+)\n<w:p/>',
-                      r'</w:p><w:p>%s\1%s%s' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
+                      r'</w:p><w:p>%s\1%s%s' % (self.DOCXmark_TXT0,
+                                                self.DOCXmark_TXT1, '\n        </w:p>'),
                       Text)  # 无注音单行处理3
         Text = re.sub('<w:p/>(.+)\n            <w:p>',
-                      r'<w:p/><w:p>%s\1%s%s<w:p>' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
+                      r'<w:p/><w:p>%s\1%s%s<w:p>' % (
+                          self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
                       Text)  # 无注音单行处理4
         if setupParameters['ConvertImage'] == 'True':
             Text = re.sub('</w:p>(.+)\n            <w:p>',
-                          r'</w:p><w:p>%s\1%s%s<w:p>' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
+                          r'</w:p><w:p>%s\1%s%s<w:p>' % (
+                              self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
                           Text)  # 无注音单行处理5
             Text = re.sub('</w:r>(.*?)\n            <w:p>',
-                          r'</w:r>%s\1%s%s<w:p>' % (self.DOCXmark_TXT0, self.DOCXmark_TXT1, '\n        </w:p>'),
+                          r'</w:r>%s\1%s%s<w:p>' % (self.DOCXmark_TXT0,
+                                                    self.DOCXmark_TXT1, '\n        </w:p>'),
                           Text)  # 无注音单行处理6
 
-        Text = re.sub('</w:r>\n<w:p/>', r'</w:r></w:p>', Text)  # 末处理 </w:r>\n<w:p/>
+        Text = re.sub('</w:r>\n<w:p/>', r'</w:r></w:p>',
+                      Text)  # 末处理 </w:r>\n<w:p/>
         Text = re.sub('<w:body>\n<w:p/>', '<w:body>', Text)  # 修剪开头空格
 
         docx.write(Text)
@@ -464,11 +481,13 @@ class functions(object):
             zipobj.close()
 
     def RuByforDocxConformityToXML(self, text):
-        self.DOCXConformity_RB0 = re.sub('> *?<', '><', re.sub('\n', '', self.DOCXConformity_RB0))
+        self.DOCXConformity_RB0 = re.sub(
+            '> *?<', '><', re.sub('\n', '', self.DOCXConformity_RB0))
         RB0 = self.DOCXConformity_RB0
         RB1 = self.DOCXConformity_RB1
         RB2 = re.sub('> *?<', '><', re.sub('\n', '', self.DOCXmark_RB2))
-        TXT0 = re.sub(' *?<', '<', re.sub('> *?<', '><', re.sub('\n', '', self.DOCXmark_TXT0)))
+        TXT0 = re.sub(' *?<', '<', re.sub('> *?<', '><',
+                      re.sub('\n', '', self.DOCXmark_TXT0)))
         TXT1 = '</w:t></w:r>'
 
         text = re.sub(r'<w:body>', '<w:body>\n', text)
@@ -476,7 +495,8 @@ class functions(object):
 
         txt = ''
         for line in textLines:
-            temp = re.search(r'(<w:r[ >].*?<w:t.*?>)(.*?)(</w:t></w:r>)', line, flags=re.M)
+            temp = re.search(
+                r'(<w:r[ >].*?<w:t.*?>)(.*?)(</w:t></w:r>)', line, flags=re.M)
             if temp is not None:
                 TXT0 = temp.group(1)  # 获取字形
                 # print(TXT0)
@@ -493,13 +513,16 @@ class functions(object):
                     RB1 = re.sub('<w:rPr><w:rFonts w:eastAsia="Yu Mincho"/><w:lang w:eastAsia="ja-JP"/></w:rPr>', font2,
                                  self.DOCXConformity_RB1)
 
-                line = re.sub(r'(<w:t[^<>]*?>)([^<>]+?)<ruby><rb>', r'\1\2%s<ruby><rb>' % TXT1, line, flags=re.M)
+                line = re.sub(r'(<w:t[^<>]*?>)([^<>]+?)<ruby><rb>',
+                              r'\1\2%s<ruby><rb>' % TXT1, line, flags=re.M)
                 line = re.sub(r'</rp></ruby>([^<>]+?)<ruby><rb>', r'</rp></ruby>%s\1%s<ruby><rb>' % (TXT0, TXT1), line,
                               flags=re.M)
                 line = re.sub(r'</rp></ruby>([^<>]+?)</w:t></w:r>', r'</rp></ruby>%s\1%s' % (TXT0, TXT1), line,
                               flags=re.M)
-                line = re.sub(r'</rp></ruby></w:t></w:r>', r'</rp></ruby>', line, flags=re.M)
-                line = re.sub(r'(<w:r[ >].*?<w:t[^<>]*?>)<ruby><rb>', r'<ruby><rb>', line, flags=re.M)
+                line = re.sub(r'</rp></ruby></w:t></w:r>',
+                              r'</rp></ruby>', line, flags=re.M)
+                line = re.sub(
+                    r'(<w:r[ >].*?<w:t[^<>]*?>)<ruby><rb>', r'<ruby><rb>', line, flags=re.M)
 
                 line = re.sub(r'<ruby><rb>(.*?)</rb><rp>\(</rp><rt>(.*?)</rt><rp>\)</rp></ruby>',
                               RB0 + r'\2' + RB1 + r'\1' + RB2, line, flags=re.M)
@@ -537,9 +560,11 @@ class functions(object):
             os.chdir(dir)
             if os.path.isdir(dir + os.sep + i):
                 if filePath is '':
-                    self.ListAllFiles(dir=dir + os.sep + i, filePath=i, file_list=file_list)
+                    self.ListAllFiles(dir=dir + os.sep + i,
+                                      filePath=i, file_list=file_list)
                 else:
-                    self.ListAllFiles(dir=dir + os.sep + i, filePath=filePath + os.sep + i, file_list=file_list)
+                    self.ListAllFiles(
+                        dir=dir + os.sep + i, filePath=filePath + os.sep + i, file_list=file_list)
             else:
                 if filePath is '':
                     file_list.append(i)
@@ -559,8 +584,11 @@ class functions(object):
                         for item in m.readlines():
                             item2 = (re.search('full-path="(.*?)"', item))
                             if item2 is not None:
-                                content = rootSite + os.sep + ((re.search('full-path="(.*?)"', item)).groups())[0]
-                                os.chdir(os.path.split(content)[0])  # 切换地址到full-path=目录
+                                content = rootSite + os.sep + \
+                                    ((re.search('full-path="(.*?)"', item)
+                                      ).groups())[0]
+                                # 切换地址到full-path=目录
+                                os.chdir(os.path.split(content)[0])
                         flag = True  # 已找到
                         break
 
@@ -575,7 +603,8 @@ class functions(object):
                     if i is not None:
                         i = ((re.search('href="(.*?)"', item)).groups())[0]
                         if str(i[-6:]).lower() == ".xhtml" or str(i[-5:]).lower() == ".html":
-                            subFiles.append(os.path.abspath('.') + os.sep + str(i))
+                            subFiles.append(os.path.abspath(
+                                '.') + os.sep + str(i))
         return content
 
     def findXhtml(self, dir1, subFiles=[]):
@@ -588,34 +617,38 @@ class functions(object):
                     subFiles.append(os.path.abspath(i))
         return subFiles
 
-    def getRB_withoutInternet(self, Text, RBforDOCX=False):
+    def getRB_with_pykakasi(self, Text, RBforDOCX=False):
         kks = pykakasi.kakasi()
         Text = re.sub('〇', '◯', Text)
         segmented = functions().segmentationLine(Text)  # 分割
 
         progressSum = len(segmented)
-        progress = 0
-        progress_make = 1
+        oneline_percent = 1.0 / progressSum
+        processed_percent = 0
+        process_print_target = 0.1
 
-        txt = u''
+        text_out = u''
         for text in segmented:
             result = kks.convert(text)
-            for item in result:  # <ruby><rb>著者</rb><rp>(</rp><rt>ちょしゃ</rt><rp>)</rp></ruby>
+            # <ruby><rb>著者</rb><rp>(</rp><rt>ちょしゃ</rt><rp>)</rp></ruby>
+            for item in result:
                 if not (item['hira'] == item['orig']) and item['hira'] != '':
                     # hira = re.sub('\n', '', item['hira'])
                     hira = item['hira']
-                    txt = txt + ('<ruby><rb>' + item['orig'] + '</rb><rp>(</rp><rt>' + hira + '</rt><rp>)</rp></ruby>')
+                    text_out = text_out + \
+                        ('<ruby><rb>' + item['orig'] +
+                         '</rb><rp>(</rp><rt>' + hira + '</rt><rp>)</rp></ruby>')
                 else:
-                    txt = txt + item['orig']
+                    text_out = text_out + item['orig']
 
-            progress = progress + 1
-            if progress / progressSum * 100 >= progress_make * 20:
-                print(str(int(progress / progressSum * 100)) + r'%')
-                progress_make += 1
+            processed_percent += oneline_percent
+            if processed_percent >= process_print_target:
+                print(str(int(processed_percent * 100)) + r'%')
+                process_print_target += 0.1
 
-        txt = self.RBrepair(txt, RBforDOCX)
+        text_out = self.RBrepair(text_out, RBforDOCX)
 
-        return txt
+        return text_out
 
     def getRB(self, Text, operatingPath, setupParameters, RBforDOCX=False):
         Text = re.sub('〇', '◯', Text)
@@ -680,24 +713,29 @@ class functions(object):
             testLines = self.segmentationLine(txt)
             test = ''
             for line in testLines:
-                temp = re.search(r'［＃.*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?］', line, re.M)
+                temp = re.search(
+                    r'［＃.*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?］', line, re.M)
                 while temp is not None:
                     line = line[:temp.start(1)] + line[temp.end(1):]
-                    temp = re.search(r'［＃.*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?］', line, re.M)
+                    temp = re.search(
+                        r'［＃.*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?］', line, re.M)
                 temp = re.search(r'［＃.*?(<ruby><rb>).*?］', line, re.M)
                 while temp is not None:
                     line = line[:temp.start(1)] + line[temp.end(1):]
                     temp = re.search(r'［＃.*?(<ruby><rb>).*?］', line, re.M)
 
-                temp = re.search(r'\[image].*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?\[/image]', line, re.M)
+                temp = re.search(
+                    r'\[image].*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?\[/image]', line, re.M)
                 while temp is not None:
                     line = line[:temp.start(1)] + line[temp.end(1):]
                     temp = re.search(r'\[image].*?(</rb><rp>\(</rp><rt>.*?</rt><rp>\)</rp></ruby>).*?\[/image]', line,
                                      re.M)
-                temp = re.search(r'\[image].*?(<ruby><rb>).*?\[/image]', line, re.M)
+                temp = re.search(
+                    r'\[image].*?(<ruby><rb>).*?\[/image]', line, re.M)
                 while temp is not None:
                     line = line[:temp.start(1)] + line[temp.end(1):]
-                    temp = re.search(r'\[image].*?(<ruby><rb>).*?\[/image]', line, re.M)
+                    temp = re.search(
+                        r'\[image].*?(<ruby><rb>).*?\[/image]', line, re.M)
                 test = test + line
             txt = test
         if RBforDOCX:
@@ -712,7 +750,8 @@ class functions(object):
         index = 0
         while index + maxSet <= len(text):
             indexIn = index + maxSet
-            for i in range(index + maxSet, index, -1):  # text[index:index + maxSet:-1]:
+            # text[index:index + maxSet:-1]:
+            for i in range(index + maxSet, index, -1):
                 if text[i] == "\n" or text[i - 6:i] == '</w:r>':
                     segmented.append(text[index:indexIn])
                     index = indexIn
@@ -722,14 +761,14 @@ class functions(object):
 
         return segmented
 
-    def segmentationLine(self, text):  # 分割str为行
+    def segmentationLine(self, text: str):  # 分割str为行
         line = []
         index = 0
         indexIn = 0
         while index < len(text):
             if text[index] == "\n" or text[index - 6:index] == '</w:r>':
                 line.append(text[indexIn:index])
-                line.append('\n')
+                # line.append('\n')
                 indexIn = index
             index += 1
         line.append(text[indexIn:])

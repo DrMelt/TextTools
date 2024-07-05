@@ -1,9 +1,8 @@
-
 # -*- coding: utf-8 -*-
 # @Time : 2022/3/25 11:52
 # @Author : DrMelt
 # @File : TextTools
-# @Software : PyCharm
+
 import time
 import shutil
 import chardet
@@ -25,10 +24,7 @@ from PIL import Image, ImageTk
 
 
 def main():
-    """
-    删除青空文库格式《》注音
-    :return:
-    """
+
     root = tk.Tk()
     root.withdraw()
     Filepath = filedialog.askopenfilename()
